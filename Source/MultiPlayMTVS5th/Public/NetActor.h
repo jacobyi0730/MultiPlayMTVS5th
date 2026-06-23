@@ -28,10 +28,18 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<class UStaticMeshComponent> MeshComp;
-	
+
 	void PrintNetLog();
+	void FindOwner();
 	
 	UPROPERTY(EditAnywhere)
 	float SearchDistance = 200.f;
 
+	UPROPERTY(Replicated)
+	float RotYaw;
+	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 };
+
+
+

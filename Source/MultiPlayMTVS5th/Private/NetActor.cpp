@@ -5,6 +5,7 @@
 
 #include "EngineUtils.h"
 #include "MultiPlayMTVS5thCharacter.h"
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -34,7 +35,42 @@ void ANetActor::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	PrintNetLog();
+	FindOwner();
+	
+	// 서버에서 회전하고싶다.
+	if (HasAuthority())
+	{
+		AddActorLocalRotation(FRotator(0, 50 * DeltaTime, 0));
+		RotYaw = GetActorRotation().Yaw;
+	}
+	else
+	{
+		// 클라이언트
+		FRotator rot = GetActorRotation();
+		rot.Yaw = RotYaw;
+		SetActorRotation(rot);
+	}
+}
 
+void ANetActor::PrintNetLog()
+{
+	// 커넥션
+	FString strConn = nullptr == GetNetConnection() ? TEXT("Invalid Connection") : TEXT("Valid Connection");
+	// 오너
+	FString strOwner = nullptr == GetOwner() ? TEXT("No Owner") : GetOwner()->GetName();
+
+
+	FString lRole = UEnum::GetValueAsString<ENetRole>(GetLocalRole());
+	FString rRole = UEnum::GetValueAsString<ENetRole>(GetRemoteRole());
+
+	FString netLog = FString::Printf(
+		TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
+
+	DrawDebugString(GetWorld(), GetActorLocation(), netLog, nullptr, FColor::Yellow, 0, true, 1);
+}
+
+void ANetActor::FindOwner()
+{
 	// 권한이 있어야한다(서버에서 해야한다)
 	if (HasAuthority())
 	{
@@ -64,19 +100,9 @@ void ANetActor::Tick(float DeltaTime)
 	}
 }
 
-void ANetActor::PrintNetLog()
+void ANetActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
-	// 커넥션
-	FString strConn = nullptr == GetNetConnection() ? TEXT("Invalid Connection") : TEXT("Valid Connection");
-	// 오너
-	FString strOwner = nullptr == GetOwner() ? TEXT("No Owner") : GetOwner()->GetName();
-
-
-	FString lRole = UEnum::GetValueAsString<ENetRole>(GetLocalRole());
-	FString rRole = UEnum::GetValueAsString<ENetRole>(GetRemoteRole());
-
-	FString netLog = FString::Printf(
-		TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
-
-	DrawDebugString(GetWorld(), GetActorLocation(), netLog, nullptr, FColor::Yellow, 0, true, 1);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(ANetActor, RotYaw);
 }
