@@ -14,6 +14,8 @@
 
 AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 {
+	PrimaryActorTick.bCanEverTick = true;
+	
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
@@ -48,6 +50,13 @@ AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AMultiPlayMTVS5thCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+	
+	PrintNetLog();
 }
 
 void AMultiPlayMTVS5thCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,4 +139,22 @@ void AMultiPlayMTVS5thCharacter::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void AMultiPlayMTVS5thCharacter::PrintNetLog()
+{
+	// 커넥션
+	FString strConn = nullptr == GetNetConnection() ?
+		TEXT("Invalid Connection") : TEXT("Valid Connection");
+	// 오너
+	FString strOwner = nullptr == GetOwner() ?
+		TEXT("No Owner") : GetOwner()->GetName();
+	
+	
+	FString lRole = UEnum::GetValueAsString<ENetRole>(GetLocalRole());
+	FString rRole = UEnum::GetValueAsString<ENetRole>(GetRemoteRole());
+
+	FString netLog = FString::Printf(TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
+	
+	DrawDebugString(GetWorld(), GetActorLocation(), netLog, nullptr, FColor::Yellow, 0, true, 1);
 }

@@ -53,6 +53,8 @@ public:
 
 	/** Constructor */
 	AMultiPlayMTVS5thCharacter();	
+	
+	virtual void Tick(float DeltaSeconds) override;
 
 protected:
 
@@ -92,5 +94,8 @@ public:
 
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	
+public:
+	void PrintNetLog();
 };
 
