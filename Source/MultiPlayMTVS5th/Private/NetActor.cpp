@@ -6,6 +6,7 @@
 #include "EngineUtils.h"
 #include "MultiPlayMTVS5thCharacter.h"
 #include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 
 
 // Sets default values
@@ -21,12 +22,34 @@ ANetActor::ANetActor()
 	MeshComp->SetupAttachment(RootComponent);
 	
 	bReplicates = true;
+	NetUpdateFrequency = 1.f;
 }
 
 // Called when the game starts or when spawned
 void ANetActor::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	Mat = MeshComp->CreateDynamicMaterialInstance(0);
+	
+	if (HasAuthority())
+	{
+		GetWorldTimerManager().SetTimer(TimerHandleMatColor, [&]()
+		{
+			MatColor = FLinearColor::MakeRandomColor();
+			OnRep_MatColor();
+			
+			NetNumber++;
+			MARK_PROPERTY_DIRTY_FROM_NAME(ANetActor, NetNumber, this);
+			
+		}, 1, true);
+	}
+}
+
+void ANetActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	GetWorldTimerManager().ClearTimer(TimerHandleMatColor);
 }
 
 // Called every frame
@@ -45,11 +68,40 @@ void ANetActor::Tick(float DeltaTime)
 	}
 	else
 	{
-		// 클라이언트
+		CurTime += DeltaTime;
+		// LastTime가 0이면 0으로 나눠야하는 상황이 발생하니까. 예외처리 한다.
+		if (LastTime < KINDA_SMALL_NUMBER)
+		{
+			return;
+		}
+		
+		// 예측
+		float newYaw = RotYaw + 50 * LastTime;
+		
+		// 보간
+		float lerpRatio = CurTime / LastTime;
+		float lerpYaw = FMath::Lerp(RotYaw, newYaw, lerpRatio);
 		FRotator rot = GetActorRotation();
-		rot.Yaw = RotYaw;
+		rot.Yaw = lerpYaw;
 		SetActorRotation(rot);
 	}
+	
+	FString str = FString::Printf(TEXT("%d"), NetNumber);
+	FVector loc = GetActorLocation() + FVector(0, 0, -50.f);
+	DrawDebugString(GetWorld(), loc, str, nullptr, FColor::Yellow, 0, true, 2);
+
+}
+
+void ANetActor::OnRep_RotYaw()
+{
+	// 클라이언트
+	FRotator rot = GetActorRotation();
+	rot.Yaw = RotYaw;
+	SetActorRotation(rot);
+	// 현재 시간을 저장
+	LastTime = CurTime;
+	// 현재시간을 초기화
+	CurTime = 0;
 }
 
 void ANetActor::PrintNetLog()
@@ -100,9 +152,28 @@ void ANetActor::FindOwner()
 	}
 }
 
+
+void ANetActor::OnRep_MatColor()
+{
+	if (Mat)
+	{
+		Mat->SetVectorParameterValue(TEXT("FloorColor"), MatColor);
+	}
+}
+
+void ANetActor::OnRep_NetNumber()
+{
+}
+
 void ANetActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
-	DOREPLIFETIME(ANetActor, RotYaw);
+	FDoRepLifetimeParams params;
+	DOREPLIFETIME_WITH_PARAMS_FAST(ANetActor, RotYaw, params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ANetActor, MatColor, params);
+	
+	FDoRepLifetimeParams params2;
+	params2.bIsPushBased = true;
+	DOREPLIFETIME_WITH_PARAMS_FAST(ANetActor, NetNumber, params2);
 }

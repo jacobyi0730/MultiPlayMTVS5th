@@ -18,6 +18,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 public:
 	// Called every frame
@@ -35,8 +36,30 @@ public:
 	UPROPERTY(EditAnywhere)
 	float SearchDistance = 200.f;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing=OnRep_RotYaw)
 	float RotYaw;
+	UFUNCTION()
+	void OnRep_RotYaw();
+	
+	float CurTime;
+	float LastTime;
+	
+	
+	UPROPERTY()
+	TObjectPtr<class UMaterialInstanceDynamic> Mat;
+	
+	UPROPERTY(ReplicatedUsing=OnRep_MatColor)
+	FLinearColor MatColor;
+	UFUNCTION()
+	void OnRep_MatColor();
+	
+	FTimerHandle TimerHandleMatColor;
+	
+	UPROPERTY(ReplicatedUsing=OnRep_NetNumber)
+	int32 NetNumber;
+	UFUNCTION()
+	void OnRep_NetNumber();
+	
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 };
