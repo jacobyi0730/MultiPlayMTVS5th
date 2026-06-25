@@ -36,8 +36,10 @@ void ANetActor::BeginPlay()
 	{
 		GetWorldTimerManager().SetTimer(TimerHandleMatColor, [&]()
 		{
-			MatColor = FLinearColor::MakeRandomColor();
-			OnRep_MatColor();
+			//MatColor = FLinearColor::MakeRandomColor();
+			//OnRep_MatColor();
+
+			ServerRPC_ChangeColor(FLinearColor::MakeRandomColor());
 			
 			NetNumber++;
 			MARK_PROPERTY_DIRTY_FROM_NAME(ANetActor, NetNumber, this);
@@ -163,6 +165,58 @@ void ANetActor::OnRep_MatColor()
 
 void ANetActor::OnRep_NetNumber()
 {
+	bAlwaysRelevant = true;
+}
+
+bool ANetActor::ServerRPC_ChangeColor_Validate(const FLinearColor& NewColor)
+{
+	return true;
+}
+
+void ANetActor::ServerRPC_ChangeColor_Implementation(const FLinearColor& NewColor)
+{
+	// 서버 응답
+	if (HasAuthority())
+	{
+		NetMulticastRPC_ChangeColor(NewColor);
+		// ClientRPC_ChangeColor_Implementation(NewColor);
+		// ClientRPC_ChangeColor(NewColor);
+	}
+}
+
+void ANetActor::ClientRPC_ChangeColor_Implementation(const FLinearColor& NewColor)
+{
+	// 클라이언트 응답
+	//if (!HasAuthority())
+	{
+		if (Mat)
+		{
+			Mat->SetVectorParameterValue(TEXT("FloorColor"), NewColor);
+		}
+	}
+}
+
+void ANetActor::NetMulticastRPC_ChangeColor_Implementation(const FLinearColor& NewColor)
+{
+	// 클라이언트 응답
+	//if (!HasAuthority())
+	{
+		if (Mat)
+		{
+			Mat->SetVectorParameterValue(TEXT("FloorColor"), NewColor);
+		}
+	}
+}
+
+bool ANetActor::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
+{
+	if (Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation))
+	{
+		return true;
+	}
+	// 
+	
+	return false;
 }
 
 void ANetActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
@@ -172,6 +226,8 @@ void ANetActor::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutL
 	FDoRepLifetimeParams params;
 	DOREPLIFETIME_WITH_PARAMS_FAST(ANetActor, RotYaw, params);
 	DOREPLIFETIME_WITH_PARAMS_FAST(ANetActor, MatColor, params);
+	
+	DOREPLIFETIME(ANetActor, Loc);
 	
 	FDoRepLifetimeParams params2;
 	params2.bIsPushBased = true;

@@ -48,6 +48,9 @@ public:
 	UPROPERTY()
 	TObjectPtr<class UMaterialInstanceDynamic> Mat;
 	
+	UPROPERTY(Replicated)
+	int32 Loc;
+	
 	UPROPERTY(ReplicatedUsing=OnRep_MatColor)
 	FLinearColor MatColor;
 	UFUNCTION()
@@ -59,6 +62,20 @@ public:
 	int32 NetNumber;
 	UFUNCTION()
 	void OnRep_NetNumber();
+	
+	
+	// ServerRPC, ClientRPC, NetMulticastRPC
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRPC_ChangeColor(const FLinearColor& NewColor);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_ChangeColor(const FLinearColor& NewColor);
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void NetMulticastRPC_ChangeColor(const FLinearColor& NewColor);
+
+	
+	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
 	
 	
 	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
