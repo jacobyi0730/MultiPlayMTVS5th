@@ -94,6 +94,37 @@ void ANetActor::Tick(float DeltaTime)
 
 }
 
+//
+// void Test()
+// {
+// 	int32 length = 1;
+// 	
+// 	TArray<uint8> buf;
+// 	
+// 	length >> (24)
+// 	
+// 	length >> (16) & 0xff
+// 	
+// 	length >> (8) & 0xff
+// 	
+// 	length & 0xff
+// 	
+// 	uint8 value = 1;
+// 	value = value >> 1;
+// 	
+// 	
+// 	uint8 upper = 1; // 0001
+// 	uint8 side = 2;	// 0010
+// 	uint8 lower = 4;// 0100
+// 	
+// 	uint8 f = upper | lower; // 0101
+// 	
+// 	if ( f & side != 0)
+// 		0101
+// 	    0010
+// 	
+// }
+
 void ANetActor::OnRep_RotYaw()
 {
 	// 클라이언트
