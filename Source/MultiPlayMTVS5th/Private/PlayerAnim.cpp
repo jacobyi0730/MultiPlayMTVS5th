@@ -23,7 +23,7 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		
 		Direction = FVector::DotProduct(velocity, right); 
 		Speed = FVector::DotProduct(velocity, forward); 
-
+		bHasPistol = Player->bHasPistol;
 	}
 	
 }

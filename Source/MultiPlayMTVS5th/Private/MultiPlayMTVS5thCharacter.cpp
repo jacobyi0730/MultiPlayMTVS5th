@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "MultiPlayMTVS5th.h"
+#include "Kismet/GameplayStatics.h"
 
 AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 {
@@ -52,6 +53,25 @@ AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 	
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
+	
+	GrabComp = CreateDefaultSubobject<USceneComponent>(TEXT("GrabComp"));
+	GrabComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
+	GrabComp->SetRelativeLocationAndRotation(
+		FVector(-16.159421, 2.178094, 3.869521),
+		FRotator(0.508895, 86.602734, 8.509347)
+		);
+}
+
+void AMultiPlayMTVS5thCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	// 세상에 있는 모든 총을 검색해서 Pistols에 넣고싶다.
+	
+	
+	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(),
+		AActor::StaticClass(),
+		TEXT("Pistol"), 
+		Pistols);
 }
 
 void AMultiPlayMTVS5thCharacter::Tick(float DeltaSeconds)
@@ -76,6 +96,9 @@ void AMultiPlayMTVS5thCharacter::SetupPlayerInputComponent(UInputComponent* Play
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiPlayMTVS5thCharacter::Look);
+		
+		
+		EnhancedInputComponent->BindAction(IA_TakePistol, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::TakePistol);
 	}
 	else
 	{
@@ -159,4 +182,63 @@ void AMultiPlayMTVS5thCharacter::PrintNetLog()
 	FString netLog = FString::Printf(TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
 	
 	DrawDebugString(GetWorld(), GetActorLocation(), netLog, nullptr, FColor::Yellow, 0, true, 1);
+}
+
+void AMultiPlayMTVS5thCharacter::TakePistol(const FInputActionValue& InputActionValue)
+{
+	// 만약 총을 소지하고있으면 버려야한다.
+	if (bHasPistol)
+	{
+		ReleasePistol();
+	}
+	else
+	{
+		GrabPistol();
+	}
+}
+
+void AMultiPlayMTVS5thCharacter::GrabPistol()
+{
+	for (auto* pistol : Pistols)
+	{
+		if (pistol->GetOwner() != nullptr)
+			continue;
+		
+		float dist = GetDistanceTo(pistol);
+		if (dist > SearchDistanceToPistol)
+			continue;
+		
+		OwnedPistol = pistol;
+		OwnedPistol->SetOwner(this);
+		bHasPistol = true;
+		
+		AttachPistol(OwnedPistol);
+		break;	
+	}
+}
+
+void AMultiPlayMTVS5thCharacter::ReleasePistol()
+{
+	if (OwnedPistol)
+	{
+		bHasPistol = false;
+		OwnedPistol->SetOwner(nullptr);
+		DetachPistol(OwnedPistol);
+		
+		OwnedPistol = nullptr;
+	}
+}
+
+void AMultiPlayMTVS5thCharacter::AttachPistol(AActor* pistolActor)
+{
+	auto* mesh = pistolActor->GetComponentByClass<UStaticMeshComponent>();
+	mesh->SetSimulatePhysics(false);
+	mesh->AttachToComponent(GrabComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+}
+
+void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
+{
+	auto* mesh = pistolActor->GetComponentByClass<UStaticMeshComponent>();
+	mesh->SetSimulatePhysics(true);
+	mesh->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 }

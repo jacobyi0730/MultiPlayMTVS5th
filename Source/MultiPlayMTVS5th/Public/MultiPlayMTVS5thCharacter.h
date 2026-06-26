@@ -49,15 +49,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+
+	
 public:
 
 	/** Constructor */
-	AMultiPlayMTVS5thCharacter();	
+	AMultiPlayMTVS5thCharacter();
+	
+	virtual void BeginPlay() override;
 	
 	virtual void Tick(float DeltaSeconds) override;
 
 protected:
-
 	/** Initialize input action bindings */
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -97,5 +100,31 @@ public:
 	
 public:
 	void PrintNetLog();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Pistol")
+	TObjectPtr<class USceneComponent> GrabComp;
+
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* IA_TakePistol;
+	
+	
+	UPROPERTY()
+	TArray<AActor*> Pistols;
+	
+	bool bHasPistol;
+	
+	UPROPERTY()
+	TObjectPtr<AActor> OwnedPistol;
+	
+	float SearchDistanceToPistol = 200.f;
+
+	void TakePistol(const FInputActionValue& InputActionValue);
+
+	void GrabPistol();
+	void ReleasePistol();
+	
+	void AttachPistol(AActor* pistolActor);
+	
+	void DetachPistol(AActor* pistolActor);
 };
 
