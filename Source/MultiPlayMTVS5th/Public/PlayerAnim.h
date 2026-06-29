@@ -30,4 +30,13 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 	
+	UPROPERTY(EditAnywhere, Category = "TPS")
+	TObjectPtr<class UAnimMontage> FireMontage;
+	
+	void PlayFireMontage();
+	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite, Category = "TPS")
+	float PitchAngle; // -60 ~ 60
+	
+	
 };

@@ -10,16 +10,21 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "MainUI.h"
 #include "MultiPlayMTVS5th.h"
+#include "MultiPlayMTVS5thPlayerController.h"
+#include "NiagaraFunctionLibrary.h"
+#include "PlayerAnim.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
+
 	// Don't rotate when the controller rotates. Let that just affect the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -50,59 +55,69 @@ AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 
 	CameraBoom->TargetArmLength = 150.0f;
 	CameraBoom->SocketOffset = FVector(0.f, 40.f, 60.f);
-	
+
 	GetCharacterMovement()->bUseControllerDesiredRotation = true;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
-	
+
 	GrabComp = CreateDefaultSubobject<USceneComponent>(TEXT("GrabComp"));
 	GrabComp->SetupAttachment(GetMesh(), TEXT("hand_rSocket"));
 	GrabComp->SetRelativeLocationAndRotation(
 		FVector(-16.159421, 2.178094, 3.869521),
 		FRotator(0.508895, 86.602734, 8.509347)
-		);
+	);
 }
 
 void AMultiPlayMTVS5thCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	// 세상에 있는 모든 총을 검색해서 Pistols에 넣고싶다.
-	
-	
+
+	PlayerController = Cast<AMultiPlayMTVS5thPlayerController>(GetController());
+
 	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(),
-		AActor::StaticClass(),
-		TEXT("Pistol"), 
-		Pistols);
+	                                             AActor::StaticClass(),
+	                                             TEXT("Pistol"),
+	                                             Pistols);
 }
 
 void AMultiPlayMTVS5thCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
+
 	PrintNetLog();
 }
 
 void AMultiPlayMTVS5thCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
+	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+	{
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMultiPlayMTVS5thCharacter::Move);
-		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &AMultiPlayMTVS5thCharacter::Look);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this,
+		                                   &AMultiPlayMTVS5thCharacter::Move);
+		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this,
+		                                   &AMultiPlayMTVS5thCharacter::Look);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMultiPlayMTVS5thCharacter::Look);
-		
-		
-		EnhancedInputComponent->BindAction(IA_TakePistol, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::TakePistol);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this,
+		                                   &AMultiPlayMTVS5thCharacter::Look);
+
+
+		EnhancedInputComponent->BindAction(IA_TakePistol, ETriggerEvent::Started, this,
+		                                   &AMultiPlayMTVS5thCharacter::TakePistol);
+
+		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::MyFire);
 	}
 	else
 	{
-		UE_LOG(LogMultiPlayMTVS5th, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+		UE_LOG(LogMultiPlayMTVS5th, Error,
+		       TEXT(
+			       "'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."
+		       ), *GetNameSafe(this));
 	}
 }
 
@@ -169,18 +184,17 @@ void AMultiPlayMTVS5thCharacter::DoJumpEnd()
 void AMultiPlayMTVS5thCharacter::PrintNetLog()
 {
 	// 커넥션
-	FString strConn = nullptr == GetNetConnection() ?
-		TEXT("Invalid Connection") : TEXT("Valid Connection");
+	FString strConn = nullptr == GetNetConnection() ? TEXT("Invalid Connection") : TEXT("Valid Connection");
 	// 오너
-	FString strOwner = nullptr == GetOwner() ?
-		TEXT("No Owner") : GetOwner()->GetName();
-	
-	
+	FString strOwner = nullptr == GetOwner() ? TEXT("No Owner") : GetOwner()->GetName();
+
+
 	FString lRole = UEnum::GetValueAsString<ENetRole>(GetLocalRole());
 	FString rRole = UEnum::GetValueAsString<ENetRole>(GetRemoteRole());
 
-	FString netLog = FString::Printf(TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
-	
+	FString netLog = FString::Printf(
+		TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
+
 	DrawDebugString(GetWorld(), GetActorLocation(), netLog, nullptr, FColor::Yellow, 0, true, 1);
 }
 
@@ -197,23 +211,61 @@ void AMultiPlayMTVS5thCharacter::TakePistol(const FInputActionValue& InputAction
 	}
 }
 
+void AMultiPlayMTVS5thCharacter::MyFire(const FInputActionValue& InputActionValue)
+{
+	// 총을 들고 있지 않으면 바로 종료
+	// 또는 현재 총알이 0이하라면 바로 종료
+	if (false == bHasPistol || 0 >= CurBulletCount)
+		return;
+
+	CurBulletCount--;
+	PlayerController->MainUI->PopBullet(CurBulletCount);
+	// 총쏘기(움찔)
+	auto* anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	if (anim)
+	{
+		anim->PlayFireMontage();
+	}
+
+	// 총쏘기 구현..
+	// 카메라 위치에서 카메라(FollowCamera) 앞방향으로 LineTrace, visibility
+	FHitResult OutHit;
+	FVector Start = FollowCamera->GetComponentLocation();
+	FVector End = Start + FollowCamera->GetForwardVector() * 100000.f;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, params);
+
+	if (bHit)
+	{
+		//OutHit.ImpactPoint
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			BulletImpactFactory,
+			OutHit.ImpactPoint,
+			UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal)
+		);
+	}
+}
+
 void AMultiPlayMTVS5thCharacter::GrabPistol()
 {
 	for (auto* pistol : Pistols)
 	{
 		if (pistol->GetOwner() != nullptr)
 			continue;
-		
+
 		float dist = GetDistanceTo(pistol);
 		if (dist > SearchDistanceToPistol)
 			continue;
-		
+
 		OwnedPistol = pistol;
 		OwnedPistol->SetOwner(this);
 		bHasPistol = true;
-		
+
 		AttachPistol(OwnedPistol);
-		break;	
+		break;
 	}
 }
 
@@ -224,7 +276,7 @@ void AMultiPlayMTVS5thCharacter::ReleasePistol()
 		bHasPistol = false;
 		OwnedPistol->SetOwner(nullptr);
 		DetachPistol(OwnedPistol);
-		
+
 		OwnedPistol = nullptr;
 	}
 }
@@ -234,6 +286,8 @@ void AMultiPlayMTVS5thCharacter::AttachPistol(AActor* pistolActor)
 	auto* mesh = pistolActor->GetComponentByClass<UStaticMeshComponent>();
 	mesh->SetSimulatePhysics(false);
 	mesh->AttachToComponent(GrabComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+	PlayerController->MainUI->SetActiveCrosshair(true);
 }
 
 void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
@@ -241,4 +295,6 @@ void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
 	auto* mesh = pistolActor->GetComponentByClass<UStaticMeshComponent>();
 	mesh->SetSimulatePhysics(true);
 	mesh->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
+
+	PlayerController->MainUI->SetActiveCrosshair(false);
 }

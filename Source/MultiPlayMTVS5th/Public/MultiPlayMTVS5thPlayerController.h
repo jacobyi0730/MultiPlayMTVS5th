@@ -48,5 +48,18 @@ protected:
 
 	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;
+	
+public:
+	
+	UPROPERTY()
+	TObjectPtr<class AMultiPlayMTVS5thCharacter> MyPlayer;
+	
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UMainUI> MainUIFactory;
+	
+	UPROPERTY()
+	TObjectPtr<UMainUI> MainUI;
+	
+	virtual void OnPossess(APawn* InPawn) override;
 
 };

@@ -19,7 +19,8 @@ public class MultiPlayMTVS5th : ModuleRules
 			"GameplayStateTreeModule",
 			"UMG",
 			"Slate",
-			"NetCore"
+			"NetCore",
+			"Niagara"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

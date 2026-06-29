@@ -107,6 +107,11 @@ public:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* IA_TakePistol;
 	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* IA_Fire;
+
+	void TakePistol(const FInputActionValue& InputActionValue);
+	void MyFire(const FInputActionValue& InputActionValue);
 	
 	UPROPERTY()
 	TArray<AActor*> Pistols;
@@ -118,7 +123,6 @@ public:
 	
 	float SearchDistanceToPistol = 200.f;
 
-	void TakePistol(const FInputActionValue& InputActionValue);
 
 	void GrabPistol();
 	void ReleasePistol();
@@ -126,5 +130,18 @@ public:
 	void AttachPistol(AActor* pistolActor);
 	
 	void DetachPistol(AActor* pistolActor);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pistol")
+	TObjectPtr<class UNiagaraSystem> BulletImpactFactory; 
+	
+	UPROPERTY()
+	TObjectPtr<class AMultiPlayMTVS5thPlayerController> PlayerController;
+	
+	
+	// 탄창
+	// 총알의 현재수, 최대수
+	UPROPERTY(EditAnywhere)
+	int32 MaxBulletCount = 10;
+	int32 CurBulletCount = MaxBulletCount;
 };
 

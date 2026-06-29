@@ -24,6 +24,18 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		Direction = FVector::DotProduct(velocity, right); 
 		Speed = FVector::DotProduct(velocity, forward); 
 		bHasPistol = Player->bHasPistol;
+		
+		PitchAngle = -Player->GetBaseAimRotation().Pitch;
+		PitchAngle = FMath::Clamp(PitchAngle, -60, 60);
 	}
+	
+}
+
+void UPlayerAnim::PlayFireMontage()
+{
+	if (!bHasPistol || !FireMontage)
+		return;
+	
+	Montage_Play(FireMontage);
 	
 }
