@@ -156,6 +156,12 @@ public:
 	int32 MaxHP = 3;
 	int32 CurHP = 3;
 	
+	// 프로퍼티
+	__declspec(property(put=SetHP, get=GetHP)) int32 HP;
+	void SetHP(int32 newHP);
+	int32 GetHP();
+	
+	
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components")
 	TObjectPtr<class UWidgetComponent> HpComp;
@@ -164,5 +170,11 @@ public:
 	TObjectPtr<class UHPBarUI> HPBarUI;
 	
 	void InitUI();
+	
+	// 피격처리
+	void DamageProcess(int32 damage);
+	
+	UPROPERTY() // 리플리케이트해야함.
+	bool bDie;
 };
 

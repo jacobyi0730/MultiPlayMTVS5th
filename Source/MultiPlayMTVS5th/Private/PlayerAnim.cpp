@@ -27,6 +27,8 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		
 		PitchAngle = -Player->GetBaseAimRotation().Pitch;
 		PitchAngle = FMath::Clamp(PitchAngle, -60, 60);
+		
+		bDie = Player->bDie;
 	}
 	
 }

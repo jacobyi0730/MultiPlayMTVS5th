@@ -256,13 +256,20 @@ void AMultiPlayMTVS5thCharacter::MyFire(const FInputActionValue& InputActionValu
 
 	if (bHit)
 	{
-		//OutHit.ImpactPoint
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-			GetWorld(),
-			BulletImpactFactory,
-			OutHit.ImpactPoint,
-			UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal)
-		);
+		// 만약 맞은것이 상대방이라면
+		if (auto* other = Cast<AMultiPlayMTVS5thCharacter>(OutHit.GetActor()))
+		{
+			other->DamageProcess(1);
+		}
+		else
+		{
+			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+				GetWorld(),
+				BulletImpactFactory,
+				OutHit.ImpactPoint,
+				UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal)
+			);
+		}
 	}
 }
 
@@ -342,6 +349,24 @@ void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
 	PlayerController->MainUI->SetActiveCrosshair(false);
 }
 
+void AMultiPlayMTVS5thCharacter::SetHP(int32 newHP)
+{
+	CurHP = newHP;
+	if (PlayerController)	// 나인가?
+	{
+		PlayerController->MainUI->UpdateHPBar(CurHP, MaxHP);
+	}
+	else // 상대인가?
+	{
+		HPBarUI->UpdateHPBar(CurHP, MaxHP);
+	}
+}
+
+int32 AMultiPlayMTVS5thCharacter::GetHP()
+{
+	return CurHP;
+}
+
 void AMultiPlayMTVS5thCharacter::InitUI()
 {
 	HPBarUI = Cast<UHPBarUI>(HpComp->GetWidget());
@@ -349,14 +374,16 @@ void AMultiPlayMTVS5thCharacter::InitUI()
 	PlayerController = Cast<AMultiPlayMTVS5thPlayerController>(GetController());
 	
 	// 체력을 모두 채우고싶다.
-	// 나인가?
-	if (PlayerController)
+	HP = MaxHP;
+	
+}
+
+void AMultiPlayMTVS5thCharacter::DamageProcess(int32 damage)
+{
+	HP -= damage;
+	// 만약 체력이 0이면 죽음처리하고싶다.
+	if (0 >= HP)
 	{
-		PlayerController->MainUI->UpdateHPBar(CurHP, MaxHP);
-	}
-	// 상대인가?
-	else
-	{
-		HPBarUI->UpdateHPBar(CurHP, MaxHP);
+		bDie = true;
 	}
 }

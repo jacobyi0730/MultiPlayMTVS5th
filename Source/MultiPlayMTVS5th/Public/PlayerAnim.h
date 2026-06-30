@@ -49,4 +49,7 @@ public:
 	UFUNCTION()
 	void AnimNotify_ReloadFinished();
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "TPS")
+	bool bDie;
+	
 };
