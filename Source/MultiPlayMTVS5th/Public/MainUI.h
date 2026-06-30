@@ -21,11 +21,20 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UUniformGridPanel> BulletPanel;
 	
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UProgressBar> HPBar;
+	
+	void UpdateHPBar(int32 Cur, int32 Max);
+	
+	
+	
 	UPROPERTY(EditAnywhere, Category = "Bullet")
 	TSubclassOf<class UUserWidget> BulletUIFactory;
 	
 	void AddBullet();
 	void PopBullet(int32 index);
+	// 모든 총알 UI 삭제
+	void RemoveAllBullets();
 	
 	
 	void SetActiveCrosshair(bool isActive);

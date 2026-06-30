@@ -9,6 +9,7 @@
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "HPBarUI.h"
 #include "InputActionValue.h"
 #include "MainUI.h"
 #include "MultiPlayMTVS5th.h"
@@ -17,6 +18,7 @@
 #include "PlayerAnim.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/WidgetComponent.h"
 
 AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 {
@@ -65,15 +67,23 @@ AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 		FVector(-16.159421, 2.178094, 3.869521),
 		FRotator(0.508895, 86.602734, 8.509347)
 	);
+	
+	
+	HpComp = CreateDefaultSubobject<UWidgetComponent>(TEXT("HpComp"));
+	HpComp->SetupAttachment(GetMesh());
 }
 
 void AMultiPlayMTVS5thCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	// 만약 나의 컨트롤러가 플레이 컨트롤러가 아니라면 InitUI를 호출하고싶다.
+	if (nullptr == Cast<APlayerController>(GetController()))
+	{
+		InitUI();
+	}
+
 	// 세상에 있는 모든 총을 검색해서 Pistols에 넣고싶다.
-
-	PlayerController = Cast<AMultiPlayMTVS5thPlayerController>(GetController());
-
 	UGameplayStatics::GetAllActorsOfClassWithTag(GetWorld(),
 	                                             AActor::StaticClass(),
 	                                             TEXT("Pistol"),
@@ -111,6 +121,8 @@ void AMultiPlayMTVS5thCharacter::SetupPlayerInputComponent(UInputComponent* Play
 		                                   &AMultiPlayMTVS5thCharacter::TakePistol);
 
 		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::MyFire);
+		
+		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::ReloadPistol);
 	}
 	else
 	{
@@ -200,6 +212,10 @@ void AMultiPlayMTVS5thCharacter::PrintNetLog()
 
 void AMultiPlayMTVS5thCharacter::TakePistol(const FInputActionValue& InputActionValue)
 {
+	// 만약 리로드 중이라면 종료
+	if (bReloadPistol)
+		return;
+
 	// 만약 총을 소지하고있으면 버려야한다.
 	if (bHasPistol)
 	{
@@ -215,7 +231,8 @@ void AMultiPlayMTVS5thCharacter::MyFire(const FInputActionValue& InputActionValu
 {
 	// 총을 들고 있지 않으면 바로 종료
 	// 또는 현재 총알이 0이하라면 바로 종료
-	if (false == bHasPistol || 0 >= CurBulletCount)
+	// 또는 리로드 중이라면 바로 종료
+	if (false == bHasPistol || 0 >= CurBulletCount || bReloadPistol)
 		return;
 
 	CurBulletCount--;
@@ -247,6 +264,32 @@ void AMultiPlayMTVS5thCharacter::MyFire(const FInputActionValue& InputActionValu
 			UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal)
 		);
 	}
+}
+
+void AMultiPlayMTVS5thCharacter::ReloadPistol(const FInputActionValue& InputActionValue)
+{
+	// 총을 잡고있지 않는다 혹은 리로드 중이라면 종료
+	if (!bHasPistol || bReloadPistol)
+		return;
+	// 리로드 몽타주 재생.
+	if (auto* anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance()))
+	{
+		anim->PlayReloadMontage();
+	}
+	bReloadPistol = true;
+}
+
+// 리로드 애니메이션 재생이 끝나면 호출해야함.
+void AMultiPlayMTVS5thCharacter::OnReloadAmmo()
+{
+	CurBulletCount = MaxBulletCount;
+	PlayerController->MainUI->RemoveAllBullets();
+	
+	for (int32 i=0 ; i<CurBulletCount ; i++)
+	{
+		PlayerController->MainUI->AddBullet();
+	}
+	bReloadPistol = false;
 }
 
 void AMultiPlayMTVS5thCharacter::GrabPistol()
@@ -297,4 +340,23 @@ void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
 	mesh->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 
 	PlayerController->MainUI->SetActiveCrosshair(false);
+}
+
+void AMultiPlayMTVS5thCharacter::InitUI()
+{
+	HPBarUI = Cast<UHPBarUI>(HpComp->GetWidget());
+
+	PlayerController = Cast<AMultiPlayMTVS5thPlayerController>(GetController());
+	
+	// 체력을 모두 채우고싶다.
+	// 나인가?
+	if (PlayerController)
+	{
+		PlayerController->MainUI->UpdateHPBar(CurHP, MaxHP);
+	}
+	// 상대인가?
+	else
+	{
+		HPBarUI->UpdateHPBar(CurHP, MaxHP);
+	}
 }

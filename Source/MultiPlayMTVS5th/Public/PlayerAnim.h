@@ -39,4 +39,14 @@ public:
 	float PitchAngle; // -60 ~ 60
 	
 	
+	UPROPERTY(EditAnywhere, Category = "TPS")
+	TObjectPtr<class UAnimMontage> ReloadMontage;
+	
+	// 애니메이션 재생을 요청
+	void PlayReloadMontage();
+	
+	// 애니메이션 재생 종료 함수(응답)
+	UFUNCTION()
+	void AnimNotify_ReloadFinished();
+	
 };

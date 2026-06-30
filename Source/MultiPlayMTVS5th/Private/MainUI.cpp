@@ -4,7 +4,14 @@
 #include "MainUI.h"
 
 #include "Components/Image.h"
+#include "Components/ProgressBar.h"
 #include "Components/UniformGridPanel.h"
+
+void UMainUI::UpdateHPBar(int32 Cur, int32 Max)
+{
+	float hpPer = static_cast<float>(Cur) / Max;
+	HPBar->SetPercent(hpPer);
+}
 
 void UMainUI::AddBullet()
 {
@@ -16,6 +23,14 @@ void UMainUI::AddBullet()
 void UMainUI::PopBullet(int32 index)
 {
 	BulletPanel->RemoveChildAt(index);
+}
+
+void UMainUI::RemoveAllBullets()
+{
+	for (auto bullet : BulletPanel->GetAllChildren())
+	{
+		BulletPanel->RemoveChild(bullet);
+	}
 }
 
 void UMainUI::SetActiveCrosshair(bool isActive)

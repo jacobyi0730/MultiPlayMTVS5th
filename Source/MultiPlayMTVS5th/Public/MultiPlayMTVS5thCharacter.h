@@ -110,13 +110,20 @@ public:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* IA_Fire;
 
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* IA_Reload;
+	
 	void TakePistol(const FInputActionValue& InputActionValue);
 	void MyFire(const FInputActionValue& InputActionValue);
+	void ReloadPistol(const FInputActionValue& InputActionValue);
+	
+	void OnReloadAmmo();
 	
 	UPROPERTY()
 	TArray<AActor*> Pistols;
 	
 	bool bHasPistol;
+	bool bReloadPistol;
 	
 	UPROPERTY()
 	TObjectPtr<AActor> OwnedPistol;
@@ -143,5 +150,19 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 MaxBulletCount = 10;
 	int32 CurBulletCount = MaxBulletCount;
+
+	// 체력
+	UPROPERTY(EditAnywhere)
+	int32 MaxHP = 3;
+	int32 CurHP = 3;
+	
+public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components")
+	TObjectPtr<class UWidgetComponent> HpComp;
+	
+	UPROPERTY()
+	TObjectPtr<class UHPBarUI> HPBarUI;
+	
+	void InitUI();
 };
 

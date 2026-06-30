@@ -31,6 +31,24 @@ void AMultiPlayMTVS5thPlayerController::BeginPlay()
 			UE_LOG(LogMultiPlayMTVS5th, Error, TEXT("Could not spawn mobile controls widget."));
 		}
 	}
+	
+	if (MainUIFactory && IsLocalController())
+	{
+		MyPlayer = Cast<AMultiPlayMTVS5thCharacter>(GetCharacter());
+		MainUI = Cast<UMainUI>(CreateWidget(GetWorld(), MainUIFactory));
+		if (MainUI)
+		{
+			MainUI->AddToViewport();
+			MainUI->SetActiveCrosshair(false);
+
+			int32 max = MyPlayer->MaxBulletCount;
+			for (int32 i = 0; i < max; i++)
+			{
+				MainUI->AddBullet();
+			}
+			MyPlayer->InitUI();
+		}
+	}
 }
 
 void AMultiPlayMTVS5thPlayerController::SetupInputComponent()
@@ -71,20 +89,5 @@ void AMultiPlayMTVS5thPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
-	if (MainUIFactory && IsLocalController())
-	{
-		MyPlayer = Cast<AMultiPlayMTVS5thCharacter>(GetCharacter());
-		MainUI = Cast<UMainUI>(CreateWidget(GetWorld(), MainUIFactory));
-		if (MainUI)
-		{
-			MainUI->AddToViewport();
-			MainUI->SetActiveCrosshair(false);
-
-			int32 max = MyPlayer->MaxBulletCount;
-			for (int32 i = 0; i < max; i++)
-			{
-				MainUI->AddBullet();
-			}
-		}
-	}
+	
 }

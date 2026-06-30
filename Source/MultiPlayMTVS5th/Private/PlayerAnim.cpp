@@ -39,3 +39,19 @@ void UPlayerAnim::PlayFireMontage()
 	Montage_Play(FireMontage);
 	
 }
+
+void UPlayerAnim::PlayReloadMontage()
+{
+	if (!bHasPistol || !ReloadMontage)
+		return;
+	
+	Montage_Play(ReloadMontage);
+}
+
+void UPlayerAnim::AnimNotify_ReloadFinished()
+{
+	if (Player)
+	{
+		Player->OnReloadAmmo();
+	}
+}
