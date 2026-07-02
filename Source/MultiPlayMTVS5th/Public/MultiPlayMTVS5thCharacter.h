@@ -191,19 +191,23 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMultiRPC_GrabPistol(AActor* pistolActor);
 	
-	
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_ReleasePistol();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMultiRPC_ReleasePistol(AActor* pistolActor);
 	
-	
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_Fire();
 	
 	UFUNCTION(NetMulticast, Unreliable)
 	void NetMultiRPC_Fire(bool bHit, const FHitResult& OutHit);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_DamageAnim();
+	
+	UPROPERTY(EditDefaultsOnly, Category="Pistol")
+	TSubclassOf<class UCameraShakeBase> DamageCameraShake;
 	
 	
 	UFUNCTION(Server, Reliable)

@@ -44,3 +44,8 @@ void UMainUI::SetActiveCrosshair(bool isActive)
 		Image_Crosshair->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
+
+void UMainUI::PlayDamageAnim()
+{
+	PlayAnimation(DamageAnim);
+}

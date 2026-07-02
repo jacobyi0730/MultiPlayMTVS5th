@@ -38,4 +38,9 @@ public:
 	
 	
 	void SetActiveCrosshair(bool isActive);
+	
+	UPROPERTY(meta=(BindWidgetAnim), Transient)
+	TObjectPtr<class UWidgetAnimation> DamageAnim;
+	
+	void PlayDamageAnim();
 };

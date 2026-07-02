@@ -434,6 +434,7 @@ void AMultiPlayMTVS5thCharacter::ServerRPC_Fire_Implementation()
 		if (auto* other = Cast<AMultiPlayMTVS5thCharacter>(OutHit.GetActor()))
 		{
 			other->DamageProcess(1);
+			other->ClientRPC_DamageAnim();
 		}
 	}
 	
@@ -465,6 +466,16 @@ void AMultiPlayMTVS5thCharacter::NetMultiRPC_Fire_Implementation(bool bHit, cons
 	}
 }
 
+void AMultiPlayMTVS5thCharacter::ClientRPC_DamageAnim_Implementation()
+{
+	if (IsLocallyControlled() && PlayerController && PlayerController->MainUI)
+	{
+		PlayerController->MainUI->PlayDamageAnim();
+		PlayerController->ClientStartCameraShake(DamageCameraShake);
+	}
+}
+
+
 void AMultiPlayMTVS5thCharacter::ServerRPC_Reload_Implementation()
 {
 	// 요청한 클라에게 리로드 하라고 요청
@@ -493,6 +504,7 @@ void AMultiPlayMTVS5thCharacter::ClientRPC_Reload_Implementation(int32 bulletCou
 	CurBulletCount = bulletCount;
 	OnReloadAmmo();
 }
+
 
 
 void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
