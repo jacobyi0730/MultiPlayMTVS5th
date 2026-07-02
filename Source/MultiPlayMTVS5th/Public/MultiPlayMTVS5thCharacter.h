@@ -150,6 +150,7 @@ public:
 	// 총알의 현재수, 최대수
 	UPROPERTY(EditAnywhere)
 	int32 MaxBulletCount = 10;
+	UPROPERTY(Replicated)
 	int32 CurBulletCount = MaxBulletCount;
 
 	// 체력
@@ -190,6 +191,26 @@ public:
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void NetMultiRPC_ReleasePistol(AActor* pistolActor);
+	
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Fire();
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void NetMultiRPC_Fire(bool bHit, const FHitResult& OutHit);
+	
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Reload();
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void NetMultiRPC_Reload();
+	
+	UFUNCTION(Client, Unreliable)
+	void ClientRPC_Reload();
+	
+	
+	
 	
 	
 	

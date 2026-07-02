@@ -235,43 +235,10 @@ void AMultiPlayMTVS5thCharacter::MyFire(const FInputActionValue& InputActionValu
 	// 또는 리로드 중이라면 바로 종료
 	if (false == bHasPistol || 0 >= CurBulletCount || bReloadPistol)
 		return;
+	
+	ServerRPC_Fire();
 
-	CurBulletCount--;
-	PlayerController->MainUI->PopBullet(CurBulletCount);
-	// 총쏘기(움찔)
-	auto* anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
-	if (anim)
-	{
-		anim->PlayFireMontage();
-	}
-
-	// 총쏘기 구현..
-	// 카메라 위치에서 카메라(FollowCamera) 앞방향으로 LineTrace, visibility
-	FHitResult OutHit;
-	FVector Start = FollowCamera->GetComponentLocation();
-	FVector End = Start + FollowCamera->GetForwardVector() * 100000.f;
-	FCollisionQueryParams params;
-	params.AddIgnoredActor(this);
-
-	bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, params);
-
-	if (bHit)
-	{
-		// 만약 맞은것이 상대방이라면
-		if (auto* other = Cast<AMultiPlayMTVS5thCharacter>(OutHit.GetActor()))
-		{
-			other->DamageProcess(1);
-		}
-		else
-		{
-			UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-				GetWorld(),
-				BulletImpactFactory,
-				OutHit.ImpactPoint,
-				UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal)
-			);
-		}
-	}
+	
 }
 
 void AMultiPlayMTVS5thCharacter::ReloadPistol(const FInputActionValue& InputActionValue)
@@ -279,25 +246,26 @@ void AMultiPlayMTVS5thCharacter::ReloadPistol(const FInputActionValue& InputActi
 	// 총을 잡고있지 않는다 혹은 리로드 중이라면 종료
 	if (!bHasPistol || bReloadPistol)
 		return;
-	// 리로드 몽타주 재생.
-	if (auto* anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance()))
-	{
-		anim->PlayReloadMontage();
-	}
+	
 	bReloadPistol = true;
+	
+	ServerRPC_Reload();
 }
 
 // 리로드 애니메이션 재생이 끝나면 호출해야함.
 void AMultiPlayMTVS5thCharacter::OnReloadAmmo()
 {
-	CurBulletCount = MaxBulletCount;
-	PlayerController->MainUI->RemoveAllBullets();
-	
-	for (int32 i=0 ; i<CurBulletCount ; i++)
-	{
-		PlayerController->MainUI->AddBullet();
-	}
 	bReloadPistol = false;
+
+	if (IsLocallyControlled() && PlayerController && PlayerController->MainUI)
+	{
+		PlayerController->MainUI->RemoveAllBullets();
+	
+		for (int32 i=0 ; i<CurBulletCount ; i++)
+		{
+			PlayerController->MainUI->AddBullet();
+		}
+	}
 }
 
 void AMultiPlayMTVS5thCharacter::GrabPistol()
@@ -423,10 +391,89 @@ void AMultiPlayMTVS5thCharacter::NetMultiRPC_ReleasePistol_Implementation(AActor
 	DetachPistol(pistolActor);
 }
 
+void AMultiPlayMTVS5thCharacter::ServerRPC_Fire_Implementation()
+{
+	// 서버에서 할일
+	CurBulletCount--;
+	
+	// 총쏘기 구현..
+	// 카메라 위치에서 카메라(FollowCamera) 앞방향으로 LineTrace, visibility
+	FHitResult OutHit;
+	FVector Start = FollowCamera->GetComponentLocation();
+	FVector End = Start + FollowCamera->GetForwardVector() * 100000.f;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit, Start, End, ECC_Visibility, params);
+	
+	if (bHit)
+	{
+		// 만약 맞은것이 상대방이라면
+		if (auto* other = Cast<AMultiPlayMTVS5thCharacter>(OutHit.GetActor()))
+		{
+			other->DamageProcess(1);
+		}
+	}
+	
+	NetMultiRPC_Fire(bHit, OutHit);
+}
+
+void AMultiPlayMTVS5thCharacter::NetMultiRPC_Fire_Implementation(bool bHit, const FHitResult& OutHit)
+{
+	if (IsLocallyControlled() && PlayerController && PlayerController->MainUI)
+	{
+		PlayerController->MainUI->PopBullet(CurBulletCount);
+	}
+	
+	// 총쏘기(움찔)
+	auto* anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance());
+	if (anim)
+	{
+		anim->PlayFireMontage();
+	}
+
+	if (bHit)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			GetWorld(),
+			BulletImpactFactory,
+			OutHit.ImpactPoint,
+			UKismetMathLibrary::MakeRotFromZ(OutHit.ImpactNormal)
+		);
+	}
+}
+
+void AMultiPlayMTVS5thCharacter::ServerRPC_Reload_Implementation()
+{
+	// 요청한 클라에게 리로드 하라고 요청
+	CurBulletCount = MaxBulletCount;
+	ClientRPC_Reload();
+
+	// 서버는 모두에게 재장전 애니메이션 요청
+	NetMultiRPC_Reload();
+}
+
+void AMultiPlayMTVS5thCharacter::NetMultiRPC_Reload_Implementation()
+{
+	// 애니메이션 재생
+	// 리로드 몽타주 재생.
+	if (auto* anim = Cast<UPlayerAnim>(GetMesh()->GetAnimInstance()))
+	{
+		anim->PlayReloadMontage();
+	}
+}
+
+void AMultiPlayMTVS5thCharacter::ClientRPC_Reload_Implementation()
+{
+	OnReloadAmmo();
+}
+
+
 void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, bHasPistol);
+	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurBulletCount);
 	
 }

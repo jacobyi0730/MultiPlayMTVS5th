@@ -26,7 +26,6 @@ void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
 		bHasPistol = Player->bHasPistol;
 		
 		PitchAngle = -Player->GetBaseAimRotation().Pitch;
-		PitchAngle = FMath::Clamp(PitchAngle, -60, 60);
 		
 		bDie = Player->bDie;
 	}
@@ -52,8 +51,4 @@ void UPlayerAnim::PlayReloadMontage()
 
 void UPlayerAnim::AnimNotify_ReloadFinished()
 {
-	if (Player)
-	{
-		Player->OnReloadAmmo();
-	}
 }
