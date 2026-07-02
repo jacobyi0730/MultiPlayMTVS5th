@@ -94,6 +94,15 @@ void AMultiPlayMTVS5thCharacter::BeginPlay()
 void AMultiPlayMTVS5thCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	
+	// HP UI를 빌보드 처리하고싶다.
+	if (HpComp && HpComp->GetVisibleFlag())
+	{
+		auto camLoc = GetWorld()->GetFirstPlayerController()->PlayerCameraManager->GetCameraLocation();
+		FVector dir = camLoc - HpComp->GetComponentLocation();
+		dir.Z = 0;
+		HpComp->SetWorldRotation(dir.GetSafeNormal().ToOrientationRotator());
+	}
 
 	//PrintNetLog();
 }
@@ -329,9 +338,9 @@ void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
 	}
 }
 
-void AMultiPlayMTVS5thCharacter::SetHP(int32 newHP)
+void AMultiPlayMTVS5thCharacter::OnRep_CurHP()
 {
-	CurHP = newHP;
+	// 서버에서 CurHP가 변경되면 클라이언트에서 호출된다. 
 	if (PlayerController)	// 나인가?
 	{
 		PlayerController->MainUI->UpdateHPBar(CurHP, MaxHP);
@@ -340,6 +349,12 @@ void AMultiPlayMTVS5thCharacter::SetHP(int32 newHP)
 	{
 		HPBarUI->UpdateHPBar(CurHP, MaxHP);
 	}
+}
+void AMultiPlayMTVS5thCharacter::SetHP(int32 newHP)
+{
+	// 서버에서 체력이 변경된다.
+	CurHP = newHP;
+	OnRep_CurHP();
 }
 
 int32 AMultiPlayMTVS5thCharacter::GetHP()
@@ -352,6 +367,12 @@ void AMultiPlayMTVS5thCharacter::InitUI()
 	HPBarUI = Cast<UHPBarUI>(HpComp->GetWidget());
 
 	PlayerController = Cast<AMultiPlayMTVS5thPlayerController>(GetController());
+	
+	// 조작하고있는 캐릭터의 HpComp는 끄고싶다.
+	if (PlayerController)
+	{
+		HpComp->SetVisibility(false);
+	}
 	
 	// 체력을 모두 채우고싶다.
 	HP = MaxHP;
@@ -480,5 +501,6 @@ void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifeti
 	
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, bHasPistol);
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurBulletCount);
+	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurHP);
 	
 }

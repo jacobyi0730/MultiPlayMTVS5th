@@ -156,7 +156,13 @@ public:
 	// 체력
 	UPROPERTY(EditAnywhere)
 	int32 MaxHP = 3;
+
+	UPROPERTY(ReplicatedUsing=OnRep_CurHP)
 	int32 CurHP = 3;
+	UFUNCTION()
+	void OnRep_CurHP();
+	
+	
 	
 	// 프로퍼티
 	__declspec(property(put=SetHP, get=GetHP)) int32 HP;
