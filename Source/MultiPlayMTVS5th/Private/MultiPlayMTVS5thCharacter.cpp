@@ -19,6 +19,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/WidgetComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
 {
@@ -94,7 +95,7 @@ void AMultiPlayMTVS5thCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	PrintNetLog();
+	//PrintNetLog();
 }
 
 void AMultiPlayMTVS5thCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -219,11 +220,11 @@ void AMultiPlayMTVS5thCharacter::TakePistol(const FInputActionValue& InputAction
 	// 만약 총을 소지하고있으면 버려야한다.
 	if (bHasPistol)
 	{
-		ReleasePistol();
+		ServerRPC_ReleasePistol();
 	}
 	else
 	{
-		GrabPistol();
+		ServerRPC_GrabPistol();
 	}
 }
 
@@ -301,6 +302,10 @@ void AMultiPlayMTVS5thCharacter::OnReloadAmmo()
 
 void AMultiPlayMTVS5thCharacter::GrabPistol()
 {
+	// 서버에서만 동작하는 함수라는 의미로...
+	// if (!HasAuthority())
+	// 	return;
+	
 	for (auto* pistol : Pistols)
 	{
 		if (pistol->GetOwner() != nullptr)
@@ -314,7 +319,7 @@ void AMultiPlayMTVS5thCharacter::GrabPistol()
 		OwnedPistol->SetOwner(this);
 		bHasPistol = true;
 
-		AttachPistol(OwnedPistol);
+		NetMultiRPC_GrabPistol(OwnedPistol);
 		break;
 	}
 }
@@ -323,10 +328,10 @@ void AMultiPlayMTVS5thCharacter::ReleasePistol()
 {
 	if (OwnedPistol)
 	{
+		NetMultiRPC_ReleasePistol(OwnedPistol);
+		
 		bHasPistol = false;
 		OwnedPistol->SetOwner(nullptr);
-		DetachPistol(OwnedPistol);
-
 		OwnedPistol = nullptr;
 	}
 }
@@ -337,7 +342,10 @@ void AMultiPlayMTVS5thCharacter::AttachPistol(AActor* pistolActor)
 	mesh->SetSimulatePhysics(false);
 	mesh->AttachToComponent(GrabComp, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 
-	PlayerController->MainUI->SetActiveCrosshair(true);
+	if (IsLocallyControlled() && PlayerController && PlayerController->MainUI)
+	{
+		PlayerController->MainUI->SetActiveCrosshair(true);
+	}
 }
 
 void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
@@ -346,7 +354,10 @@ void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
 	mesh->SetSimulatePhysics(true);
 	mesh->DetachFromComponent(FDetachmentTransformRules::KeepRelativeTransform);
 
-	PlayerController->MainUI->SetActiveCrosshair(false);
+	if (IsLocallyControlled() && PlayerController && PlayerController->MainUI)
+	{
+		PlayerController->MainUI->SetActiveCrosshair(false);
+	}
 }
 
 void AMultiPlayMTVS5thCharacter::SetHP(int32 newHP)
@@ -386,4 +397,36 @@ void AMultiPlayMTVS5thCharacter::DamageProcess(int32 damage)
 	{
 		bDie = true;
 	}
+}
+
+
+void AMultiPlayMTVS5thCharacter::NetMultiRPC_GrabPistol_Implementation(AActor* pistolActor)
+{
+	// 여기는 클라이언트다.
+	AttachPistol(pistolActor);
+}
+
+void AMultiPlayMTVS5thCharacter::ServerRPC_GrabPistol_Implementation()
+{
+	// 여기는 서버다.
+	GrabPistol();
+}
+
+
+void AMultiPlayMTVS5thCharacter::ServerRPC_ReleasePistol_Implementation()
+{
+	ReleasePistol();
+}
+
+void AMultiPlayMTVS5thCharacter::NetMultiRPC_ReleasePistol_Implementation(AActor* pistolActor)
+{
+	DetachPistol(pistolActor);
+}
+
+void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, bHasPistol);
+	
 }

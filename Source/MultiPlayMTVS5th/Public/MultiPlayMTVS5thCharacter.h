@@ -122,7 +122,8 @@ public:
 	UPROPERTY()
 	TArray<AActor*> Pistols;
 	
-	bool bHasPistol;
+	UPROPERTY(Replicated)
+	bool bHasPistol;	
 	bool bReloadPistol;
 	
 	UPROPERTY()
@@ -176,5 +177,22 @@ public:
 	
 	UPROPERTY() // 리플리케이트해야함.
 	bool bDie;
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_GrabPistol();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMultiRPC_GrabPistol(AActor* pistolActor);
+	
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ReleasePistol();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMultiRPC_ReleasePistol(AActor* pistolActor);
+	
+	
+	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 };
 
