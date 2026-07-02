@@ -206,8 +206,8 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void NetMultiRPC_Reload();
 	
-	UFUNCTION(Client, Unreliable)
-	void ClientRPC_Reload();
+	UFUNCTION(Client, Reliable)
+	void ClientRPC_Reload(int32 bulletCount);
 	
 	
 	

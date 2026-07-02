@@ -250,6 +250,7 @@ void AMultiPlayMTVS5thCharacter::ReloadPistol(const FInputActionValue& InputActi
 	bReloadPistol = true;
 	
 	ServerRPC_Reload();
+
 }
 
 // 리로드 애니메이션 재생이 끝나면 호출해야함.
@@ -447,10 +448,12 @@ void AMultiPlayMTVS5thCharacter::ServerRPC_Reload_Implementation()
 {
 	// 요청한 클라에게 리로드 하라고 요청
 	CurBulletCount = MaxBulletCount;
-	ClientRPC_Reload();
 
 	// 서버는 모두에게 재장전 애니메이션 요청
 	NetMultiRPC_Reload();
+	
+	ClientRPC_Reload(CurBulletCount);// 서버가 클라에게 요청
+
 }
 
 void AMultiPlayMTVS5thCharacter::NetMultiRPC_Reload_Implementation()
@@ -463,8 +466,10 @@ void AMultiPlayMTVS5thCharacter::NetMultiRPC_Reload_Implementation()
 	}
 }
 
-void AMultiPlayMTVS5thCharacter::ClientRPC_Reload_Implementation()
+// 클라이언트 응답
+void AMultiPlayMTVS5thCharacter::ClientRPC_Reload_Implementation(int32 bulletCount)
 {
+	CurBulletCount = bulletCount;
 	OnReloadAmmo();
 }
 
