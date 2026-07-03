@@ -3,9 +3,20 @@
 
 #include "MainUI.h"
 
+#include "MultiPlayMTVS5thPlayerController.h"
+#include "Components/Button.h"
+#include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/UniformGridPanel.h"
+
+void UMainUI::NativeConstruct()
+{
+	Super::NativeConstruct();
+	
+	Button_Retry->OnClicked.AddDynamic(this, &UMainUI::OnMyRetry);
+	Button_Exit->OnClicked.AddDynamic(this, &UMainUI::OnMyExit);
+}
 
 void UMainUI::UpdateHPBar(int32 Cur, int32 Max)
 {
@@ -48,4 +59,19 @@ void UMainUI::SetActiveCrosshair(bool isActive)
 void UMainUI::PlayDamageAnim()
 {
 	PlayAnimation(DamageAnim);
+}
+
+void UMainUI::OnMyRetry()
+{
+	// GameOverUI를 안보이게
+	GameOverUI->SetVisibility(ESlateVisibility::Hidden);
+	auto* pc = Cast<AMultiPlayMTVS5thPlayerController>(GetWorld()->GetFirstPlayerController());
+	// 마우스 커서 안보이게하고
+	pc->SetShowMouseCursor(false);
+	// 리스폰 요청
+	pc->ServerRPC_ChangeToSpectator();
+}
+
+void UMainUI::OnMyExit()
+{
 }

@@ -18,6 +18,7 @@ public:
 	
 	/** Constructor */
 	AMultiPlayMTVS5thGameMode();
+	
 };
 
 

@@ -60,6 +60,20 @@ public:
 	UPROPERTY()
 	TObjectPtr<UMainUI> MainUI;
 	
-	virtual void OnPossess(APawn* InPawn) override;
+	UPROPERTY()
+	TObjectPtr<class AMultiPlayMTVS5thGameMode> GM;
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_RespawnPlayer();
+	
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ChangeToSpectator();
+	
+	
+	
+	
+	
+	virtual void AcknowledgePossession(class APawn* P) override;
+	
 
 };

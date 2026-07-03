@@ -15,6 +15,9 @@ class MULTIPLAYMTVS5TH_API UMainUI : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+	virtual void NativeConstruct() override;
+	
+	
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UImage> Image_Crosshair;
 	
@@ -44,8 +47,6 @@ public:
 	
 	void PlayDamageAnim();
 	
-	
-	
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UHorizontalBox> GameOverUI;
 
@@ -54,5 +55,10 @@ public:
 
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UButton> Button_Exit;
+	
+	UFUNCTION()
+	void OnMyRetry();
 
+	UFUNCTION()
+	void OnMyExit();
 };
