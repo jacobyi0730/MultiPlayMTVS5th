@@ -182,7 +182,7 @@ public:
 	// 피격처리
 	void DamageProcess(int32 damage);
 	
-	UPROPERTY() // 리플리케이트해야함.
+	UPROPERTY(Replicated) // 리플리케이트해야함.
 	bool bDie;
 	
 	UFUNCTION(Server, Reliable)
@@ -218,6 +218,9 @@ public:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientRPC_Reload(int32 bulletCount);
+	
+	
+	void DieProcess();
 	
 	
 	

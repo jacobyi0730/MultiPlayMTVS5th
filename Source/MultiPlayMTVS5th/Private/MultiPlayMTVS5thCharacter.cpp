@@ -16,6 +16,7 @@
 #include "MultiPlayMTVS5thPlayerController.h"
 #include "NiagaraFunctionLibrary.h"
 #include "PlayerAnim.h"
+#include "Components/HorizontalBox.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/WidgetComponent.h"
@@ -340,6 +341,16 @@ void AMultiPlayMTVS5thCharacter::DetachPistol(AActor* pistolActor)
 
 void AMultiPlayMTVS5thCharacter::OnRep_CurHP()
 {
+	if (CurHP <= 0)
+	{
+		if (bHasPistol)
+		{
+			ServerRPC_ReleasePistol();
+		}
+		SetActorEnableCollision(false);
+		GetCharacterMovement()->DisableMovement();
+	}
+	
 	// 서버에서 CurHP가 변경되면 클라이언트에서 호출된다. 
 	if (PlayerController)	// 나인가?
 	{
@@ -506,6 +517,19 @@ void AMultiPlayMTVS5thCharacter::ClientRPC_Reload_Implementation(int32 bulletCou
 }
 
 
+void AMultiPlayMTVS5thCharacter::DieProcess()
+{
+	// 화면을 그레이스케일로 처리하고싶다.
+	GetFollowCamera()->PostProcessSettings.ColorSaturation = FVector4(0,0,0,1);
+	if (PlayerController)
+	{
+		PlayerController->SetShowMouseCursor(true);
+		if (PlayerController->MainUI && PlayerController->MainUI->GameOverUI)
+		{
+			PlayerController->MainUI->GameOverUI->SetVisibility(ESlateVisibility::Visible);
+		}
+	}
+}
 
 void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -514,5 +538,6 @@ void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, bHasPistol);
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurBulletCount);
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurHP);
+	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, bDie);
 	
 }

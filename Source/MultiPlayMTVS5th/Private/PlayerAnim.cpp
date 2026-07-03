@@ -52,3 +52,11 @@ void UPlayerAnim::PlayReloadMontage()
 void UPlayerAnim::AnimNotify_ReloadFinished()
 {
 }
+
+void UPlayerAnim::AnimNotify_DieEnd()
+{
+	if (Player && Player->IsLocallyControlled())
+	{
+		Player->DieProcess();
+	}
+}

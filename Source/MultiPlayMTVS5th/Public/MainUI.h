@@ -43,4 +43,16 @@ public:
 	TObjectPtr<class UWidgetAnimation> DamageAnim;
 	
 	void PlayDamageAnim();
+	
+	
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UHorizontalBox> GameOverUI;
+
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> Button_Retry;
+
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UButton> Button_Exit;
+
 };

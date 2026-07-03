@@ -52,4 +52,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "TPS")
 	bool bDie;
 	
+	UFUNCTION()
+	void AnimNotify_DieEnd();
+	
 };
