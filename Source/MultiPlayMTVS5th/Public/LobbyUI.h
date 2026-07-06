@@ -41,6 +41,13 @@ public:
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UScrollBox> Scroll_RoomList;
 	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class USessionSlot> SessionSlotFactroy;
+	
+	UFUNCTION()
+	void AddSlot(const struct FSessionInfo& SessionInfo);
+	
+	
 	UFUNCTION()
 	void OnMyCreateRoom();
 	

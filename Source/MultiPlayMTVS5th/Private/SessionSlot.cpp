@@ -19,7 +19,7 @@ void USessionSlot::OnMyJoinSession()
 {
 }
 
-void USessionSlot::SetSessionInfo(struct FSessionInfo& SessionInfo)
+void USessionSlot::SetSessionInfo(const struct FSessionInfo& SessionInfo)
 {
 	SessionSearchIndex = SessionInfo.Index;
 	Text_RoomName->SetText(FText::FromString(SessionInfo.RoomName));

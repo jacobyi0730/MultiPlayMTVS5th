@@ -91,11 +91,14 @@ void UNetGameInstance::OnMyFindSessionsComplete(bool bWasSuccessful)
 	{
 		auto results = SessionSearch->SearchResults;
 		
-		for (auto& ssr : results)
+		for (int32 i=0 ; i<results.Num() ; i++)
 		{
+			auto& ssr = results[i];
 			if (false == ssr.IsValid()) continue;
 			
 			FSessionInfo sessionInfo;
+			
+			sessionInfo.Index = i;
 			
 			ssr.Session.SessionSettings.Get(FName("ROOM_NAME"), sessionInfo.RoomName);
 			ssr.Session.SessionSettings.Get(FName("HOST_NAME"),  sessionInfo.HostName);
@@ -106,6 +109,8 @@ void UNetGameInstance::OnMyFindSessionsComplete(bool bWasSuccessful)
 			sessionInfo.PingSpeed = ssr.PingInMs;
 			
 			sessionInfo.Print();
+			
+			OnSearchSignatureComplete.Broadcast(sessionInfo);
 		}
 	}
 }

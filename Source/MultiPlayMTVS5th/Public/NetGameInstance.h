@@ -45,6 +45,8 @@ struct FSessionInfo
 };
 
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSearchSignature, const struct FSessionInfo&, SessionInfo);
+
 /**
  * 
  */
@@ -57,6 +59,8 @@ public:
 	
 	IOnlineSessionPtr SessionInterface;
 	FString MySessionName = TEXT("Jacobyi");
+	
+	FSearchSignature OnSearchSignatureComplete;
 
 	virtual void Init() override;
 	

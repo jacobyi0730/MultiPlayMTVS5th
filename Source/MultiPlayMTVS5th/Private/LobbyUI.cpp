@@ -9,12 +9,17 @@
 #include "Components/Slider.h"
 #include "Components/TextBlock.h"
 #include "Components/WidgetSwitcher.h"
+#include "SessionSlot.h"
+#include "Components/ScrollBox.h"
 
 void ULobbyUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	
 	GI = Cast<UNetGameInstance>(GetWorld()->GetGameInstance());
+	
+	GI->OnSearchSignatureComplete.AddDynamic(this, &ULobbyUI::AddSlot);
+	
 	Button_CreateRoom->OnClicked.AddDynamic(this, &ULobbyUI::OnMyCreateRoom);
 	Button_FindRoom->OnClicked.AddDynamic(this, &ULobbyUI::OnMyFindRoom);
 	Button_GoMainRoom->OnClicked.AddDynamic(this, &ULobbyUI::OnMyGoMainRoom);
@@ -26,6 +31,13 @@ void ULobbyUI::NativeConstruct()
 	Text_MaxPlayer->SetText(FText::AsNumber(Slider_MaxPlayer->GetValue()));
 	
 	OnMyGoMainRoom();
+}
+
+void ULobbyUI::AddSlot(const struct FSessionInfo& SessionInfo)
+{
+	auto* slot = CreateWidget<USessionSlot>(this, SessionSlotFactroy);
+	slot->SetSessionInfo(SessionInfo);
+	Scroll_RoomList->AddChild(slot);
 }
 
 void ULobbyUI::OnMyCreateRoom()

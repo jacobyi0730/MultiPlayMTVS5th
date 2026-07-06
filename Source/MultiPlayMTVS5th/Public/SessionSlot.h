@@ -36,7 +36,7 @@ public:
 	UFUNCTION()
 	void OnMyJoinSession();
 	
-	void SetSessionInfo(struct FSessionInfo& SessionInfo);
+	void SetSessionInfo(const struct FSessionInfo& SessionInfo);
 	
 	
 };
