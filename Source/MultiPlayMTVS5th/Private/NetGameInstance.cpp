@@ -5,6 +5,7 @@
 
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
+#include "Online/OnlineSessionNames.h"
 
 void UNetGameInstance::Init()
 {
@@ -16,15 +17,17 @@ void UNetGameInstance::Init()
 		if (SessionInterface)
 		{
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UNetGameInstance::OnMyCreateSessionComplete);
+			
+			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UNetGameInstance::OnMyFindSessionsComplete);
 		}
 	}
 	
 	
-	FTimerHandle TimerHandle;
-	GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
-	{
-		OnMyCreateSession(MySessionName, 10);
-	}, 2, false);
+	// FTimerHandle TimerHandle;
+	// GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
+	// {
+	// 	OnMyCreateSession(MySessionName, 10);
+	// }, 2, false);
 	
 	
 }
@@ -69,5 +72,41 @@ void UNetGameInstance::OnMyCreateSession(FString roomName, int32 maxPlayer)
 void UNetGameInstance::OnMyCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnMyCreateSessionComplete : SessionName : %s, bWasSuccessful : %d"), *SessionName.ToString(), bWasSuccessful);
+}
+
+void UNetGameInstance::OnMyFindSessions()
+{
+	SessionSearch = MakeShareable(new FOnlineSessionSearch());
+	
+	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	SessionSearch->bIsLanQuery = FName("NULL") == IOnlineSubsystem::Get() ->GetSubsystemName();
+	SessionSearch->MaxSearchResults = 30;
+	
+	SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+}
+
+void UNetGameInstance::OnMyFindSessionsComplete(bool bWasSuccessful)
+{
+	if (bWasSuccessful)
+	{
+		auto results = SessionSearch->SearchResults;
+		
+		for (auto& ssr : results)
+		{
+			if (false == ssr.IsValid()) continue;
+			
+			FSessionInfo sessionInfo;
+			
+			ssr.Session.SessionSettings.Get(FName("ROOM_NAME"), sessionInfo.RoomName);
+			ssr.Session.SessionSettings.Get(FName("HOST_NAME"),  sessionInfo.HostName);
+			
+			sessionInfo.MaxPlayer = ssr.Session.SessionSettings.NumPublicConnections;
+			// 현재 입장 수 = 총수 - 입장가능수
+			sessionInfo.JoinPlayerCount = sessionInfo.MaxPlayer - ssr.Session.NumOpenPublicConnections;
+			sessionInfo.PingSpeed = ssr.PingInMs;
+			
+			sessionInfo.Print();
+		}
+	}
 }
 

@@ -7,6 +7,44 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "NetGameInstance.generated.h"
 
+USTRUCT(BlueprintType)
+struct FSessionInfo
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(BlueprintReadWrite)
+	FString RoomName;
+	
+	UPROPERTY(BlueprintReadWrite)
+	FString HostName;
+	
+	UPROPERTY(BlueprintReadWrite)
+	int32 MaxPlayer;
+	
+	UPROPERTY(BlueprintReadWrite)
+	int32 JoinPlayerCount;
+
+	UPROPERTY(BlueprintReadWrite)
+	int32 PingSpeed;
+	
+	UPROPERTY(BlueprintReadWrite)
+	int32 Index;
+	
+	void Print()
+	{
+		FString log = FString::Printf(TEXT("[%d]%s : %s, %d/%d %dms"), 
+			Index,
+			*RoomName,
+			*HostName,
+			JoinPlayerCount,
+			MaxPlayer,
+			PingSpeed);
+		
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *log);
+	}
+};
+
+
 /**
  * 
  */
@@ -19,7 +57,7 @@ public:
 	
 	IOnlineSessionPtr SessionInterface;
 	FString MySessionName = TEXT("Jacobyi");
-	
+
 	virtual void Init() override;
 	
 	virtual void Shutdown() override;
@@ -29,5 +67,11 @@ public:
 	// 방생성 응답
 	UFUNCTION()
 	void OnMyCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	
+	// 방검색
+	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	void OnMyFindSessions();
+	UFUNCTION()
+	void OnMyFindSessionsComplete(bool bWasSuccessful);
 	
 };
