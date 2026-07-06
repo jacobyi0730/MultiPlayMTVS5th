@@ -18,10 +18,16 @@ class MULTIPLAYMTVS5TH_API UNetGameInstance : public UGameInstance
 public:
 	
 	IOnlineSessionPtr SessionInterface;
+	FString MySessionName = TEXT("Jacobyi");
 	
 	virtual void Init() override;
 	
 	virtual void Shutdown() override;
 	
-	void OnMyCreateSession();
+	// 방생성 요청
+	void OnMyCreateSession(FString roomName, int32 maxPlayer);
+	// 방생성 응답
+	UFUNCTION()
+	void OnMyCreateSessionComplete(FName SessionName, bool bWasSuccessful);
+	
 };
