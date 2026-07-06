@@ -1,0 +1,1 @@
+"C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor.exe" "C:\Projects\MultiPlayMTVS5th\MultiPlayMTVS5th.uproject" -game -ResX=600 -ResY=400 -WinX=100 -WinY=100 -log

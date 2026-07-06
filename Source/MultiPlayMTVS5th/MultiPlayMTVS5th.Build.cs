@@ -20,7 +20,10 @@ public class MultiPlayMTVS5th : ModuleRules
 			"UMG",
 			"Slate",
 			"NetCore",
-			"Niagara"
+			"Niagara",
+			"OnlineSubsystem",
+			"OnlineSubsystemSteam",
+			"OnlineSubsystemUtils"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
