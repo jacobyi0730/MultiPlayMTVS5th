@@ -61,4 +61,10 @@ public:
 
 	UFUNCTION()
 	void OnMyExit();
+	
+	
+	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UTextBlock> Text_UserList;
+	
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 };

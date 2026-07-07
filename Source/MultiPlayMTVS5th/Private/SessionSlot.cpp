@@ -17,6 +17,11 @@ void USessionSlot::NativeConstruct()
 
 void USessionSlot::OnMyJoinSession()
 {
+	// GI의 JoinSession을 해야한다.
+	if (GI)
+	{
+		GI->OnMyJoinSession(SessionSearchIndex);
+	}
 }
 
 void USessionSlot::SetSessionInfo(const struct FSessionInfo& SessionInfo)

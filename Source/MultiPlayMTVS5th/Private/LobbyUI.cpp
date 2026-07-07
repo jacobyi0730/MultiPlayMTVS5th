@@ -18,7 +18,8 @@ void ULobbyUI::NativeConstruct()
 	
 	GI = Cast<UNetGameInstance>(GetWorld()->GetGameInstance());
 	
-	GI->OnSearchSignatureComplete.AddDynamic(this, &ULobbyUI::AddSlot);
+	GI->OnSearchComplete.AddDynamic(this, &ULobbyUI::AddSlot);
+	GI->OnSearchLockComplete.AddDynamic(this, &ULobbyUI::FindRoomButtonLock);
 	
 	Button_CreateRoom->OnClicked.AddDynamic(this, &ULobbyUI::OnMyCreateRoom);
 	Button_FindRoom->OnClicked.AddDynamic(this, &ULobbyUI::OnMyFindRoom);
@@ -40,8 +41,18 @@ void ULobbyUI::AddSlot(const struct FSessionInfo& SessionInfo)
 	Scroll_RoomList->AddChild(slot);
 }
 
+void ULobbyUI::FindRoomButtonLock(bool bLock)
+{
+	Button_FindRoom->SetIsEnabled(!bLock);
+}
+
 void ULobbyUI::OnMyCreateRoom()
 {
+	if (false == Edit_UserName->GetText().IsEmpty())
+	{
+		GI->MySessionName = Edit_UserName->GetText().ToString();
+	}
+	
 	GI->OnMyCreateSession(
 		Edit_RoomName->GetText().ToString(),
 		Slider_MaxPlayer->GetValue());
@@ -54,7 +65,12 @@ void ULobbyUI::OnMySliderValueChanged(float value)
 
 void ULobbyUI::OnMyFindRoom()
 {
-	GI->OnMyFindSessions();
+	// 기존의 UI를 삭제하고 시도.
+	Scroll_RoomList->ClearChildren();
+	if (GI)
+	{
+		GI->OnMyFindSessions();
+	}
 }
 
 void ULobbyUI::OnMyGoMainRoom()
@@ -64,5 +80,9 @@ void ULobbyUI::OnMyGoMainRoom()
 
 void ULobbyUI::OnMyGoFindRoom()
 {
+	if (false == Edit_UserName->GetText().IsEmpty())
+	{
+		GI->MySessionName = Edit_UserName->GetText().ToString();
+	}
 	WidgetSwitcher->SetActiveWidgetIndex(1);
 }

@@ -20,6 +20,9 @@ public:
 	TObjectPtr<class UNetGameInstance> GI;
 	
 	UPROPERTY(meta=(BindWidget))
+	TObjectPtr<class UEditableText>	Edit_UserName;
+	
+	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class UEditableText>	Edit_RoomName;
 	UPROPERTY(meta=(BindWidget))
 	TObjectPtr<class USlider> Slider_MaxPlayer;
@@ -46,6 +49,9 @@ public:
 	
 	UFUNCTION()
 	void AddSlot(const struct FSessionInfo& SessionInfo);
+	
+	UFUNCTION()
+	void FindRoomButtonLock(bool bLock);
 	
 	
 	UFUNCTION()

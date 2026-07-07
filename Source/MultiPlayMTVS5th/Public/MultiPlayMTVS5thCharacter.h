@@ -126,8 +126,10 @@ public:
 	bool bHasPistol;	
 	bool bReloadPistol;
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	TObjectPtr<AActor> OwnedPistol;
+	virtual void PostNetInit() override;
+	
 	
 	float SearchDistanceToPistol = 200.f;
 

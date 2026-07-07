@@ -8,7 +8,10 @@
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
+#include "Components/TextBlock.h"
 #include "Components/UniformGridPanel.h"
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
 
 void UMainUI::NativeConstruct()
 {
@@ -74,4 +77,21 @@ void UMainUI::OnMyRetry()
 
 void UMainUI::OnMyExit()
 {
+}
+
+void UMainUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	
+	// 플레이어 리스트 출력
+	FString list;
+	auto PlayerStates = GetWorld()->GetGameState()->PlayerArray;
+	for (auto player : PlayerStates)
+	{
+		list.Append(FString::Printf(TEXT("%s : %d\n"),
+			*player->GetPlayerName(),
+			static_cast<int>(player->GetScore())
+			));
+	}
+	Text_UserList->SetText(FText::FromString(list));
 }

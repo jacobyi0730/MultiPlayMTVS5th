@@ -19,6 +19,8 @@ void UNetGameInstance::Init()
 			SessionInterface->OnCreateSessionCompleteDelegates.AddUObject(this, &UNetGameInstance::OnMyCreateSessionComplete);
 			
 			SessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UNetGameInstance::OnMyFindSessionsComplete);
+			
+			SessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UNetGameInstance::OnMyJoinSessionComplete);
 		}
 	}
 	
@@ -72,6 +74,15 @@ void UNetGameInstance::OnMyCreateSession(FString roomName, int32 maxPlayer)
 void UNetGameInstance::OnMyCreateSessionComplete(FName SessionName, bool bWasSuccessful)
 {
 	UE_LOG(LogTemp, Warning, TEXT("OnMyCreateSessionComplete : SessionName : %s, bWasSuccessful : %d"), *SessionName.ToString(), bWasSuccessful);
+	if (bWasSuccessful)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CreateSession Success!!!"));
+		GetWorld()->ServerTravel(TEXT("/Game/MutiPlayer/Maps/BattleMap?listen"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("CreateSession Failed..."));
+	}
 }
 
 void UNetGameInstance::OnMyFindSessions()
@@ -83,10 +94,13 @@ void UNetGameInstance::OnMyFindSessions()
 	SessionSearch->MaxSearchResults = 30;
 	
 	SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
+	
+	OnSearchLockComplete.Broadcast(true);
 }
 
 void UNetGameInstance::OnMyFindSessionsComplete(bool bWasSuccessful)
 {
+	OnSearchLockComplete.Broadcast(false);	
 	if (bWasSuccessful)
 	{
 		auto results = SessionSearch->SearchResults;
@@ -110,8 +124,34 @@ void UNetGameInstance::OnMyFindSessionsComplete(bool bWasSuccessful)
 			
 			sessionInfo.Print();
 			
-			OnSearchSignatureComplete.Broadcast(sessionInfo);
+			if (OnSearchComplete.IsBound())
+			{
+				OnSearchComplete.Broadcast(sessionInfo);
+			}
 		}
+	}
+}
+
+void UNetGameInstance::OnMyJoinSession(int32 index)
+{
+	auto sr = SessionSearch->SearchResults[index];
+	SessionInterface->JoinSession(0, FName(MySessionName), sr);
+}
+
+void UNetGameInstance::OnMyJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result)
+{
+	if (false == SessionInterface.IsValid())
+		return;
+	if (Result != EOnJoinSessionCompleteResult::Type::Success)
+		return;
+	
+	FString url;
+	SessionInterface->GetResolvedConnectString(SessionName, url);
+	UE_LOG(LogTemp, Warning, TEXT("join url : %s"), *url);
+	auto* pc = GetWorld()->GetFirstPlayerController();
+	if (false == url.IsEmpty() && pc)
+	{
+		pc->ClientTravel(url, TRAVEL_Absolute);
 	}
 }
 

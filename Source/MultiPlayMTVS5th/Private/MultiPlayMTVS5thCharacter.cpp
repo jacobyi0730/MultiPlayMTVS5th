@@ -20,6 +20,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/PlayerState.h"
 #include "Net/UnrealNetwork.h"
 
 AMultiPlayMTVS5thCharacter::AMultiPlayMTVS5thCharacter()
@@ -279,6 +280,17 @@ void AMultiPlayMTVS5thCharacter::OnReloadAmmo()
 	}
 }
 
+void AMultiPlayMTVS5thCharacter::PostNetInit()
+{
+	Super::PostNetInit();
+	// 뒤늦게 합류한 상태의 예외처리
+	// 총을 잡은 상태라면 총을 붙이고싶다.
+	if (bHasPistol && OwnedPistol)
+	{
+		AttachPistol(OwnedPistol);
+	}
+}
+
 void AMultiPlayMTVS5thCharacter::GrabPistol()
 {
 	// 서버에서만 동작하는 함수라는 의미로...
@@ -446,6 +458,9 @@ void AMultiPlayMTVS5thCharacter::ServerRPC_Fire_Implementation()
 		{
 			other->DamageProcess(1);
 			other->ClientRPC_DamageAnim();
+			
+			auto ps = GetPlayerState();
+			ps->SetScore(ps->GetScore() + 1);
 		}
 	}
 	
@@ -539,5 +554,6 @@ void AMultiPlayMTVS5thCharacter::GetLifetimeReplicatedProps(TArray<class FLifeti
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurBulletCount);
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, CurHP);
 	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, bDie);
+	DOREPLIFETIME(AMultiPlayMTVS5thCharacter, OwnedPistol);
 	
 }

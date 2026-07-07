@@ -46,6 +46,7 @@ struct FSessionInfo
 
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSearchSignature, const struct FSessionInfo&, SessionInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSearchLockSignature, bool, bSearching);
 
 /**
  * 
@@ -60,7 +61,8 @@ public:
 	IOnlineSessionPtr SessionInterface;
 	FString MySessionName = TEXT("Jacobyi");
 	
-	FSearchSignature OnSearchSignatureComplete;
+	FSearchSignature OnSearchComplete;
+	FSearchLockSignature OnSearchLockComplete;
 
 	virtual void Init() override;
 	
@@ -69,13 +71,15 @@ public:
 	// 방생성 요청
 	void OnMyCreateSession(FString roomName, int32 maxPlayer);
 	// 방생성 응답
-	UFUNCTION()
 	void OnMyCreateSessionComplete(FName SessionName, bool bWasSuccessful);
 	
 	// 방검색
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 	void OnMyFindSessions();
-	UFUNCTION()
 	void OnMyFindSessionsComplete(bool bWasSuccessful);
 	
+	// 방참여 요청
+	void OnMyJoinSession(int32 index);
+	// 방생성 응답
+	void OnMyJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 };
