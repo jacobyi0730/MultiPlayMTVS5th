@@ -113,6 +113,13 @@ public:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* IA_Reload;
 	
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* IA_Voice;
+	
+	void StartVoiceChat(const FInputActionValue& InputActionValue);
+	void StopVoiceChat(const FInputActionValue& InputActionValue);
+	
+	
 	void TakePistol(const FInputActionValue& InputActionValue);
 	void MyFire(const FInputActionValue& InputActionValue);
 	void ReloadPistol(const FInputActionValue& InputActionValue);

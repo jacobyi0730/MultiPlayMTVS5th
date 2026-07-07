@@ -23,7 +23,8 @@ public class MultiPlayMTVS5th : ModuleRules
 			"Niagara",
 			"OnlineSubsystem",
 			"OnlineSubsystemSteam",
-			"OnlineSubsystemUtils"
+			"OnlineSubsystemUtils",
+			"SteamSockets"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });

@@ -135,6 +135,9 @@ void AMultiPlayMTVS5thCharacter::SetupPlayerInputComponent(UInputComponent* Play
 		EnhancedInputComponent->BindAction(IA_Fire, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::MyFire);
 		
 		EnhancedInputComponent->BindAction(IA_Reload, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::ReloadPistol);
+		
+		EnhancedInputComponent->BindAction(IA_Voice, ETriggerEvent::Started, this, &AMultiPlayMTVS5thCharacter::StartVoiceChat);
+		EnhancedInputComponent->BindAction(IA_Voice, ETriggerEvent::Completed, this, &AMultiPlayMTVS5thCharacter::StopVoiceChat);
 	}
 	else
 	{
@@ -220,6 +223,22 @@ void AMultiPlayMTVS5thCharacter::PrintNetLog()
 		TEXT("Conn : %s\nOwner : %s\nLocalRole : %s\nRemoteRole : %s"), *strConn, *strOwner, *lRole, *rRole);
 
 	DrawDebugString(GetWorld(), GetActorLocation(), netLog, nullptr, FColor::Yellow, 0, true, 1);
+}
+
+void AMultiPlayMTVS5thCharacter::StartVoiceChat(const FInputActionValue& InputActionValue)
+{
+	if (PlayerController)
+	{
+		PlayerController->StartTalking();
+	}
+}
+
+void AMultiPlayMTVS5thCharacter::StopVoiceChat(const FInputActionValue& InputActionValue)
+{
+	if (PlayerController)
+	{
+		PlayerController->StopTalking();
+	}
 }
 
 void AMultiPlayMTVS5thCharacter::TakePistol(const FInputActionValue& InputActionValue)

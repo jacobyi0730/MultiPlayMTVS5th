@@ -4,6 +4,7 @@
 #include "MainUI.h"
 
 #include "MultiPlayMTVS5thPlayerController.h"
+#include "NetGameInstance.h"
 #include "Components/Button.h"
 #include "Components/HorizontalBox.h"
 #include "Components/Image.h"
@@ -77,6 +78,10 @@ void UMainUI::OnMyRetry()
 
 void UMainUI::OnMyExit()
 {
+	if (auto GI = Cast<UNetGameInstance>(GetWorld()->GetGameInstance()))
+	{
+		GI->OnMyExitRoom();
+	}
 }
 
 void UMainUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

@@ -63,6 +63,13 @@ public:
 	
 	FSearchSignature OnSearchComplete;
 	FSearchLockSignature OnSearchLockComplete;
+	
+	FDelegateHandle CreateSessionDelegateHandle;
+	FDelegateHandle FindSessionDelegateHandle;
+	FDelegateHandle JoinSessionDelegateHandle;
+	FDelegateHandle DestroySessionDelegateHandle;
+	FDelegateHandle UserInviteDelegateHandle;
+	
 
 	virtual void Init() override;
 	
@@ -82,4 +89,18 @@ public:
 	void OnMyJoinSession(int32 index);
 	// 방생성 응답
 	void OnMyJoinSessionComplete(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
+
+	// 방퇴장 요청
+	void OnMyExitRoom();
+	// 방퇴장 응답
+	void OnMyDestroySessionComplete(FName SessionName, bool bWasSuccessful);
+
+	void OnMyInviteAcceptedComplete(bool bWasSuccessful, int ControllerId, TSharedPtr<const FUniqueNetId> UserId, const FOnlineSessionSearchResult& InviteResult);
+
+	void OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type ErrorType, const FString& String);
+	
+	
+	FString StringBase64Encoder(const FString& str);
+	FString StringBase64Decoder(const FString& str);
+
 };

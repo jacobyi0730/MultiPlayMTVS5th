@@ -22,7 +22,8 @@ ANetActor::ANetActor()
 	MeshComp->SetupAttachment(RootComponent);
 	
 	bReplicates = true;
-	NetUpdateFrequency = 1.f;
+	SetNetUpdateFrequency(1.f);
+	//NetUpdateFrequency = 1.f;
 }
 
 // Called when the game starts or when spawned
